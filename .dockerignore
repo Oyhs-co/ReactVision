@@ -1,0 +1,23 @@
+# Dependencias
+node_modules
+.pnpm-store
+
+# Archivos de desarrollo
+.git
+.gitignore
+.env
+.env.*
+*.log
+README.md
+LICENSE
+
+# Build y cache
+.next
+out
+dist
+build
+*.tsbuildinfo
+
+# Editor y sistema
+.vscode
+.DS_Store

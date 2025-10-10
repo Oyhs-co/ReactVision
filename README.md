@@ -67,4 +67,54 @@ pnpm dev
 
 La aplicación estará disponible en `http://localhost:9002` (o el puerto que se indique en la terminal).
 
+## Despliegue con Docker
+
+El proyecto incluye configuración para Docker y Docker Compose, facilitando el despliegue en producción.
+
+### 1. Variables de Entorno para Producción
+
+Asegúrate de tener todas las variables de entorno necesarias configuradas:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=tu-url-de-supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-clave-anonima-de-supabase
+NEXT_PUBLIC_ADMIN_KEY=tu-clave-admin-secreta
+GEMINI_API_KEY=tu-clave-api-gemini
+```
+
+### 2. Construir y Ejecutar con Docker Compose
+
+Para desplegar la aplicación usando Docker Compose:
+
+```bash
+# Construir la imagen
+docker-compose build
+
+# Iniciar los servicios
+docker-compose up -d
+```
+
+La aplicación estará disponible en `http://localhost:3000`.
+
+### 3. Gestión del Contenedor
+
+Comandos útiles para gestionar la aplicación:
+
+```bash
+# Ver logs
+docker-compose logs -f app
+
+# Detener la aplicación
+docker-compose down
+
+# Reconstruir y reiniciar (después de cambios)
+docker-compose up -d --build
+```
+
+### 4. Consideraciones de Seguridad
+
+- La clave de administrador (`NEXT_PUBLIC_ADMIN_KEY`) es necesaria para operaciones sensibles como la limpieza de datos.
+- Asegúrate de usar una clave fuerte y mantenerla segura.
+- En producción, considera usar un servicio de gestión de secretos.
+
 ---
