@@ -79,7 +79,7 @@ function HomePage() {
 
       // Convertir los datos de Supabase al formato de la aplicación
       const formattedResults = data?.map(test => ({
-        id: parseInt(test.id) || 0,
+        id: Number(test.id) || 0,
         average: Number(test.average_time) || 0,
         attempts: test.attempts?.map(attempt => ({
           time: Number(attempt.time) || 0,

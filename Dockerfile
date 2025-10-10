@@ -1,5 +1,5 @@
 # Utilizar una imagen oficial de Node.js con menor superficie de ataque
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Instalar pnpm de forma segura
 RUN corepack enable && corepack prepare pnpm@latest --activate

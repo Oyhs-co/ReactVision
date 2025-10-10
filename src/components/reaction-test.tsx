@@ -49,6 +49,16 @@ export function ReactionTest({ onTestComplete, onNewTest, disabled = false }: Re
     }
   }, []);
 
+  const resetTest = useCallback((forceDisabled = false) => {
+    cleanupTimers();
+    setState(forceDisabled ? 'disabled' : 'idle');
+    setLastReactionTime(0);
+    setAttemptDetails([]);
+    setCurrentAttemptNumber(1);
+    testCompletedRef.current = false;
+    userReactedRef.current = false;
+  }, [cleanupTimers]);
+
   useEffect(() => {
     return () => cleanupTimers();
   }, [cleanupTimers]);
@@ -66,17 +76,7 @@ export function ReactionTest({ onTestComplete, onNewTest, disabled = false }: Re
     } else if (state === 'disabled') {
       setState('idle');
     }
-  }, [disabled, cleanupTimers]);
-  
-  const resetTest = useCallback((forceDisabled = false) => {
-    cleanupTimers();
-    setState(forceDisabled ? 'disabled' : 'idle');
-    setLastReactionTime(0);
-    setAttemptDetails([]);
-    setCurrentAttemptNumber(1);
-    testCompletedRef.current = false;
-    userReactedRef.current = false;
-  }, [cleanupTimers]);
+  }, [disabled, cleanupTimers, resetTest, state]);
   
   const showSummary = useCallback(() => {
     if (testCompletedRef.current) return;
@@ -292,7 +292,7 @@ export function ReactionTest({ onTestComplete, onNewTest, disabled = false }: Re
           New Test
         </Button>
       ) : (
-        <Button onClick={() => resetTest()} variant="outline" className={cn(state === 'idle' || state === 'disabled' || state === 'summary' ? 'invisible' : 'visible')}>
+        <Button onClick={() => resetTest()} variant="outline" className={cn(state === 'idle' || state === 'disabled' ? 'invisible' : 'visible')}>
           <RefreshCw className="w-4 h-4 mr-2" />
           Reset Test
         </Button>

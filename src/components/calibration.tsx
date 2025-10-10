@@ -1,11 +1,9 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { ReactionTest } from './reaction-test';
 import { Button } from './ui/button';
-import { Progress } from './ui/progress';
 import { BarChart, Lightbulb, CheckCircle, AlertTriangle } from 'lucide-react';
-import type { Result } from '@/app/page';
 
 /**
  * Propiedades para el componente Calibration.
@@ -18,10 +16,10 @@ type CalibrationProps = {
   disabled?: boolean;
 };
 
-type TestResultData = { 
-  times: number[], 
-  average: number, 
-  faults: number 
+type TestResultData = {
+  attempts: { time: number; wasFault: boolean; delayUsed: number }[];
+  average: number;
+  faults: number;
 };
 
 /**
@@ -37,7 +35,8 @@ export function Calibration({ onCalibrated, disabled = false }: CalibrationProps
   /**
    * Maneja el resultado de la serie de 5 tests de reacción.
    */
-  const handleCalibrationComplete = useCallback(({ average: testAverage }: TestResultData) => {
+  const handleCalibrationComplete = useCallback((data: TestResultData) => {
+    const testAverage = data.average;
     if (testAverage > 0) { // Solo usar resultados válidos
         setAverage(testAverage);
         onCalibrated(testAverage);
@@ -59,7 +58,7 @@ export function Calibration({ onCalibrated, disabled = false }: CalibrationProps
        <div className="text-center p-4 text-muted-foreground">
          <AlertTriangle className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
          <h3 className="text-xl font-semibold text-card-foreground">Calibration Disabled</h3>
-         <p className="mt-2">Please go to the 'Test' tab and fill in all user data to enable calibration.</p>
+         <p className="mt-2">Please go to the <strong>Test</strong> tab and fill in all user data to enable calibration.</p>
        </div>
      );
   }
@@ -80,7 +79,7 @@ export function Calibration({ onCalibrated, disabled = false }: CalibrationProps
   if (isCalibrating) {
     return (
       <div className="space-y-6">
-        <ReactionTest onTestComplete={handleCalibrationComplete} />
+        <ReactionTest onTestComplete={handleCalibrationComplete} onNewTest={() => {}} />
         <div className="text-center">
           <Button onClick={() => setIsCalibrating(false)} variant="outline">Cancel Calibration</Button>
         </div>
@@ -92,7 +91,7 @@ export function Calibration({ onCalibrated, disabled = false }: CalibrationProps
     <div className="text-center p-4">
       <Lightbulb className="w-12 h-12 text-primary mx-auto mb-4" />
       <h3 className="text-xl font-semibold">Calibrate Your Reaction Time</h3>
-      <p className="text-muted-foreground mt-2 mb-6 max-w-md mx-auto">We'll run one quick test (5 attempts) to establish your baseline reaction time. This helps in getting more accurate results.</p>
+      <p className="text-muted-foreground mt-2 mb-6 max-w-md mx-auto">We&apos;ll run one quick test (5 attempts) to establish your baseline reaction time. This helps in getting more accurate results.</p>
       <Button onClick={startCalibration} size="lg">
         <BarChart className="w-5 h-5 mr-2" />
         Start Calibration

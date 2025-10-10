@@ -9,9 +9,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import type { Result, AttemptDetail } from '@/app/page';
+import type { Result } from '@/app/page';
 import { useToast } from '@/hooks/use-toast';
-import { saveAiAnalysis, getAiAnalysis, deleteAllTests } from '@/lib/supabase/api';
+import { saveAiAnalysis, deleteAllTests } from '@/lib/supabase/api';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +30,8 @@ type ResultsProps = {
 };
 
 const ALL_FIELDS = ['Test ID', 'Timestamp', 'Age', 'Gender', 'Wears Glasses', 'Visual Fatigue', 'Average Time (ms)', 'Calibrated Average (ms)', 'Faults', 'Attempt Number', 'Attempt Time (ms)', 'Was Fault', 'Delay Used (ms)'];
+
+type CSVRow = Record<string, string | number>;
 
 export function Results({ results, calibration }: ResultsProps) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -50,7 +52,7 @@ export function Results({ results, calibration }: ResultsProps) {
   }));
 
   const flattenDataForCsv = (data: typeof dataWithCalibration) => {
-    const flatData: any[] = [];
+    const flatData: CSVRow[] = [];
     data.forEach(row => {
       if (row.attempts.length === 0) {
         flatData.push({
@@ -91,7 +93,7 @@ export function Results({ results, calibration }: ResultsProps) {
     return flatData;
   };
 
-  const arrayToCsv = (data: any[], columns: string[]) => {
+  const arrayToCsv = (data: CSVRow[], columns: string[]) => {
     const header = columns.join(',');
     const rows = data.map(row => {
       return columns.map(col => {
@@ -111,9 +113,11 @@ export function Results({ results, calibration }: ResultsProps) {
       // Primero intentamos usar el nuevo API de sistema de archivos
       const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
       
-      if (window.showSaveFilePicker) {
+      type SavePicker = (options: { suggestedName?: string; types?: Array<{ description: string; accept: Record<string, string[]> }> }) => Promise<{ createWritable: () => Promise<{ write: (blob: Blob) => Promise<void>; close: () => Promise<void> }> }>;
+      const w = window as Window & typeof globalThis & { showSaveFilePicker?: SavePicker };
+      if (typeof w.showSaveFilePicker === 'function') {
         try {
-          const handle = await window.showSaveFilePicker({
+          const handle = await w.showSaveFilePicker({
             suggestedName: filename,
             types: [{
               description: 'CSV File',
@@ -267,11 +271,12 @@ export function Results({ results, calibration }: ResultsProps) {
                             });
                             // Recargar la página para actualizar la vista
                             window.location.reload();
-                          } catch (error: any) {
+                          } catch (error: unknown) {
+                            const message = error instanceof Error ? error.message : "Error al eliminar los datos";
                             toast({
                               variant: "destructive",
                               title: "Error",
-                              description: error.message || "Error al eliminar los datos",
+                              description: message,
                             });
                           } finally {
                             setIsDeleting(false);
