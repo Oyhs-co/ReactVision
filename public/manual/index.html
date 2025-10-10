@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReactiVision - User Manual</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background">
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div>
+        <div class="particle"></div><div class="particle"></div><div class="particle"></div><div class="particle"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1 id="animated-title"></h1>
+            <p>Welcome to ReactiVision! Here’s how to use the application.</p>
+        </header>
+
+        <main>
+            <section id="test">
+                <h2>The Reaction Test</h2>
+                <p>The main goal is to measure your reaction time. The test consists of 5 attempts.</p>
+                <ul>
+                    <li><strong>Fill in your data:</strong> Provide your age, gender, glasses status, and visual fatigue level.</li>
+                    <li><strong>Start the test:</strong> Click the large box when it says "Click to start".</li>
+                    <li><strong>Wait for green:</strong> When it turns green, click as fast as possible.</li>
+                    <li><strong>Invalid clicks:</strong> Clicking early counts as a fault.</li>
+                    <li><strong>Review:</strong> After 5 attempts, your average time and faults are saved.</li>
+                </ul>
+            </section>
+
+            <section id="calibration">
+                <h2>Calibration</h2>
+                <p>Calibration establishes your baseline for more accurate reaction results.</p>
+                <ul>
+                    <li><strong>How it works:</strong> You react to a sound cue to isolate cognitive delay.</li>
+                    <li><strong>Perform the test:</strong> Focus on the audio signal, not visual cues.</li>
+                    <li><strong>Result:</strong> The average time becomes your calibration value.</li>
+                </ul>
+            </section>
+
+            <section id="results">
+                <h2>Results & Export</h2>
+                <p>This section shows all your completed test results.</p>
+                <ul>
+                    <li><strong>Average Time:</strong> The mean of your valid reaction times.</li>
+                    <li><strong>Calibrated Average:</strong> Average adjusted using calibration data.</li>
+                    <li><strong>Export to CSV:</strong> Download your data for analysis.</li>
+                    <li><strong>AI Analysis:</strong> Use AI tools to gain insights from your data.</li>
+                </ul>
+            </section>
+
+            <section id="tips">
+                <h2>Tips for Accurate Results</h2>
+                <ul>
+                    <li>Stay focused and minimize distractions.</li>
+                    <li>Perform calibration before main tests.</li>
+                    <li>Keep your hand comfortable on your input device.</li>
+                    <li>Provide accurate demographic data for context.</li>
+                </ul>
+            </section>
+        </main>
+    </div>
+
+    <button id="back-to-top" title="Go to top">↑</button>
+
+    <script>
+        // Animación de aparición por secciones
+        const sections = document.querySelectorAll("main section");
+        const observer = new IntersectionObserver(entries => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add("visible");
+            });
+        }, { threshold: 0.2 });
+        sections.forEach(section => observer.observe(section));
+
+        // Título animado tipo "escritura" con brillo sin resplandor
+        const title = document.getElementById("animated-title");
+        const fullText = "ReactiVision User Manual";
+        let index = 0;
+        function typeWriter() {
+            if (index < fullText.length) {
+                title.innerHTML += `<span>${fullText.charAt(index)}</span>`;
+                index++;
+                setTimeout(typeWriter, 80);
+            } else {
+                title.classList.add("shine");
+            }
+        }
+        window.onload = typeWriter;
+
+        // Botón volver arriba
+        const btn = document.getElementById("back-to-top");
+        window.addEventListener("scroll", () => {
+            if (window.scrollY > 400) btn.classList.add("show");
+            else btn.classList.remove("show");
+        });
+        btn.addEventListener("click", () => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+
+        // 🔍 Efecto de enfoque al acercarse al centro
+        window.addEventListener("scroll", () => {
+            const middle = window.innerHeight / 2;
+            sections.forEach(sec => {
+                const rect = sec.getBoundingClientRect();
+                const secMiddle = rect.top + rect.height / 2;
+                const distance = Math.abs(middle - secMiddle);
+                const scale = Math.max(1, 1.1 - distance / 800); // más cerca = más grande
+                sec.style.transform = `scale(${scale})`;
+                sec.style.transition = "transform 0.3s ease-out";
+            });
+        });
+    </script>
+</body>
+</html>
+

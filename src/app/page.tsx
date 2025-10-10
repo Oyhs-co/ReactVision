@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ReactionTest } from '@/components/reaction-test';
 import { Calibration } from '@/components/calibration';
 import { Results } from '@/components/results';
-import { TestTube, Timer, FileText, AlertTriangle, User, Glasses, VenetianMask, Eye } from 'lucide-react';
+import { TestTube, Timer, FileText, AlertTriangle, User, Glasses, VenetianMask, Eye, HelpCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -206,12 +207,19 @@ function HomePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8 md:p-12">
       <div className="w-full max-w-4xl">
-        <header className="mb-8 text-center">
+        <header className="mb-8 text-center relative">
           <h1 className="text-5xl font-bold text-primary font-headline flex items-center justify-center gap-3">
             <Timer className="w-12 h-12" />
             ReactiVision
           </h1>
           <p className="text-muted-foreground mt-2">Precision Reaction Time Measurement</p>
+          <div className="absolute top-0 right-0">
+            <a href="/manual/index.html" target="_blank" rel="noopener noreferrer" aria-label="Open user manual">
+              <Button variant="outline" size="icon">
+                <HelpCircle className="h-4 w-4" />
+              </Button>
+            </a>
+          </div>
         </header>
 
         <Tabs defaultValue="test" className="w-full">
@@ -335,3 +343,4 @@ function HomePage() {
 }
 
 export default HomePage;
+
