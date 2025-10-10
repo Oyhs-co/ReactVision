@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import type { Result, AttemptDetail } from '@/app/page';
 import { useToast } from '@/hooks/use-toast';
+import { saveAiAnalysis, getAiAnalysis, deleteAllTests } from '@/lib/supabase/api';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,18 +25,19 @@ import {
 } from "@/components/ui/alert-dialog"
 
 type ResultsProps = {
-  results: Result[];
-  calibration: number;
-  onClearResults: () => void;
+  readonly results: Result[];
+  readonly calibration: number;
 };
 
 const ALL_FIELDS = ['Test ID', 'Timestamp', 'Age', 'Gender', 'Wears Glasses', 'Visual Fatigue', 'Average Time (ms)', 'Calibrated Average (ms)', 'Faults', 'Attempt Number', 'Attempt Time (ms)', 'Was Fault', 'Delay Used (ms)'];
 
-export function Results({ results, calibration, onClearResults }: ResultsProps) {
+export function Results({ results, calibration }: ResultsProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processedCsv, setProcessedCsv] = useState<string | null>(null);
   const [selectedFields, setSelectedFields] = useState<string[]>(ALL_FIELDS);
   const [initialDelay, setInitialDelay] = useState<number>(calibration);
+  const [adminKey, setAdminKey] = useState<string>('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -104,17 +106,56 @@ export function Results({ results, calibration, onClearResults }: ResultsProps) 
     return [header, ...rows].join('\n');
   };
 
-  const handleExport = (data: string, filename: string) => {
-    const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    if (link.href) {
-      URL.revokeObjectURL(link.href);
+  const handleExport = async (data: string, filename: string) => {
+    try {
+      // Primero intentamos usar el nuevo API de sistema de archivos
+      const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
+      
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{
+              description: 'CSV File',
+              accept: { 'text/csv': ['.csv'] },
+            }],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          return;
+        } catch (err) {
+          if (!(err instanceof Error) || err.name !== 'AbortError') {
+            console.warn('File System API failed, falling back to download link');
+          }
+        }
+      }
+
+      // Fallback al método tradicional
+      const link = document.createElement('a');
+      if (link.href) {
+        URL.revokeObjectURL(link.href);
+      }
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      
+      // Limpieza después de un breve retraso
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      }, 100);
+
+    } catch (error) {
+      console.error('Error exporting file:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo exportar el archivo. Intente con otro navegador.',
+      });
     }
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
   
   const handleProcessWithAi = async () => {
@@ -125,11 +166,28 @@ export function Results({ results, calibration, onClearResults }: ResultsProps) 
     const rawDataCsv = arrayToCsv(flatData, ALL_FIELDS);
 
     try {
+      // Procesar datos con IA
       const result = await processReactionData({
         rawData: rawDataCsv,
         initialDelay: initialDelay,
         selectedFields: selectedFields,
       });
+
+      // Guardar el resultado para el test más reciente
+      if (results.length > 0) {
+        const latestTest = results[0];
+        await saveAiAnalysis({
+          test_id: latestTest.id,
+          analysis_text: `Analysis performed with initial delay: ${initialDelay}ms and selected fields: ${selectedFields.join(', ')}`,
+          processed_data: result.processedData
+        });
+
+        toast({
+          title: "Analysis Saved",
+          description: "The AI analysis has been saved successfully.",
+        });
+      }
+
       setProcessedCsv(result.processedData);
     } catch (error) {
       console.error('AI processing failed:', error);
@@ -161,37 +219,79 @@ export function Results({ results, calibration, onClearResults }: ResultsProps) 
               </CardDescription>
             </div>
             <div className="flex gap-2">
-              <Button 
-                onClick={() => handleExport(arrayToCsv(flattenDataForCsv(dataWithCalibration), ALL_FIELDS), 'reactivision_results.csv')}
-                disabled={results.length === 0}
-                variant="outline"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export CSV
-              </Button>
-               <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    disabled={results.length === 0}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Clear Data
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete all your test results.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={onClearResults}>Continue</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => handleExport(arrayToCsv(flattenDataForCsv(dataWithCalibration), ALL_FIELDS), 'reactivision_results.csv')}
+                  disabled={results.length === 0}
+                  variant="outline"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export CSV
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" disabled={results.length === 0}>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Clear Data
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Estás seguro de que quieres borrar todos los datos?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Necesitarás la clave de administrador para continuar.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="my-4">
+                      <Label htmlFor="adminKey">Clave de Administrador</Label>
+                      <Input
+                        id="adminKey"
+                        type="password"
+                        placeholder="Ingresa la clave de administrador"
+                        value={adminKey}
+                        onChange={(e) => setAdminKey(e.target.value)}
+                      />
+                    </div>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        disabled={isDeleting || !adminKey}
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          setIsDeleting(true);
+                          try {
+                            await deleteAllTests(adminKey);
+                            toast({
+                              title: "Datos Eliminados",
+                              description: "Todos los datos han sido eliminados exitosamente.",
+                            });
+                            // Recargar la página para actualizar la vista
+                            window.location.reload();
+                          } catch (error: any) {
+                            toast({
+                              variant: "destructive",
+                              title: "Error",
+                              description: error.message || "Error al eliminar los datos",
+                            });
+                          } finally {
+                            setIsDeleting(false);
+                            setAdminKey('');
+                          }
+                        }}
+                      >
+                        {isDeleting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Eliminando...
+                          </>
+                        ) : (
+                          "Continuar"
+                        )}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -213,14 +313,14 @@ export function Results({ results, calibration, onClearResults }: ResultsProps) 
             <TableBody>
               {dataWithCalibration.map((result) => (
                 <TableRow key={result.id}>
-                  <TableCell className="font-medium">{result.id}</TableCell>
-                  <TableCell>{result.age}</TableCell>
-                  <TableCell className="capitalize">{result.gender}</TableCell>
+                  <TableCell className="font-medium">{result.id || 0}</TableCell>
+                  <TableCell>{result.age || 0}</TableCell>
+                  <TableCell className="capitalize">{result.gender || 'other'}</TableCell>
                   <TableCell>{result.wearsGlasses ? 'Yes' : 'No'}</TableCell>
-                  <TableCell>{result.visualFatigue}</TableCell>
-                  <TableCell>{Math.round(result.average)}</TableCell>
-                  <TableCell>{calibration > 0 ? Math.round(result.calibratedAverage) : '0'}</TableCell>
-                  <TableCell>{result.faults}</TableCell>
+                  <TableCell>{result.visualFatigue || 1}</TableCell>
+                  <TableCell>{isNaN(result.average) ? '0' : Math.round(result.average)}</TableCell>
+                  <TableCell>{calibration > 0 && !isNaN(result.calibratedAverage) ? Math.round(result.calibratedAverage) : '0'}</TableCell>
+                  <TableCell>{isNaN(result.faults) ? '0' : result.faults}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

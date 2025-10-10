@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ReactionTest } from '@/components/reaction-test';
@@ -13,6 +13,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import { getTests, insertTest, insertAttempts } from '@/lib/supabase/api';
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * @typedef {object} AttemptDetail
@@ -27,6 +29,11 @@ export type AttemptDetail = {
 };
 
 /**
+ * Tipo para el género del usuario.
+ */
+export type Gender = 'male' | 'female' | 'other';
+
+/**
  * @typedef {object} Result
  * @property {number} id - El identificador único del resultado.
  * @property {AttemptDetail[]} attempts - Array con los detalles de cada uno de los 5 intentos.
@@ -35,7 +42,7 @@ export type AttemptDetail = {
  * @property {string} timestamp - La fecha y hora en que se completó el test.
  * @property {number} age - La edad del usuario.
  * @property {boolean} wearsGlasses - Si el usuario usaba gafas.
- * @property {'male' | 'female' | 'other'} gender - El género del usuario.
+ * @property {Gender} gender - El género del usuario.
  * @property {number} visualFatigue - El nivel de fatiga visual del usuario (1-10).
  */
 export type Result = {
@@ -46,7 +53,7 @@ export type Result = {
   timestamp: string;
   age: number;
   wearsGlasses: boolean;
-  gender: 'male' | 'female' | 'other';
+  gender: Gender;
   visualFatigue: number;
 };
 
@@ -55,13 +62,52 @@ export type Result = {
  * Gestiona el estado de los resultados de las pruebas y la calibración.
  * @returns {JSX.Element} El componente de la página de inicio.
  */
-export default function Home() {
+function HomePage() {
+  const [gender, setGender] = useState<Gender>('other');
   const [results, setResults] = useState<Result[]>([]);
   const [calibration, setCalibration] = useState<number>(0);
   const [age, setAge] = useState<number | ''>('');
   const [wearsGlasses, setWearsGlasses] = useState<boolean>(false);
-  const [gender, setGender] = useState<'male' | 'female' | 'other'>('other');
   const [visualFatigue, setVisualFatigue] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const loadResults = useCallback(async () => {
+    try {
+      const data = await getTests();
+
+      // Convertir los datos de Supabase al formato de la aplicación
+      const formattedResults = data?.map(test => ({
+        id: parseInt(test.id) || 0,
+        average: Number(test.average_time) || 0,
+        attempts: test.attempts?.map(attempt => ({
+          time: Number(attempt.time) || 0,
+          wasFault: Boolean(attempt.was_fault),
+          delayUsed: Number(attempt.delay_used) || 0,
+        })) || [],
+        faults: Number(test.faults) || 0,
+        timestamp: test.timestamp || new Date().toISOString(),
+        age: Number(test.age) || 0,
+        wearsGlasses: Boolean(test.wears_glasses),
+        gender: (test.gender as 'male' | 'female' | 'other') || 'other',
+        visualFatigue: Number(test.visual_fatigue) || 1,
+      })) || [];
+
+      setResults(formattedResults);
+      setError(null);
+    } catch (err) {
+      console.error('Error loading results:', err);
+      setError('No se pudieron cargar los resultados.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Cargar resultados al inicio
+  useEffect(() => {
+    loadResults();
+  }, [loadResults]);
 
 
   /**
@@ -71,28 +117,64 @@ export default function Home() {
    * @param {number} testData.average - El promedio de los tiempos válidos.
    * @param {number} testData.faults - El número de fallos.
    */
-  const addResult = useCallback((testData: { attempts: AttemptDetail[]; average: number; faults: number }) => {
+  const addResult = useCallback(async (testData: { attempts: AttemptDetail[]; average: number; faults: number }) => {
     if (age === '') return;
-    setResults(prev => [
-      ...prev,
-      { 
-        id: prev.length + 1, 
-        ...testData,
-        timestamp: new Date().toISOString(),
-        age: Number(age), 
-        wearsGlasses,
-        gender,
-        visualFatigue
-      }
-    ]);
-  }, [age, wearsGlasses, gender, visualFatigue]);
 
-  /**
-   * Limpia todos los resultados de las pruebas.
-   */
-  const clearResults = useCallback(() => {
-    setResults([]);
-  }, []);
+    try {
+      // Crear el test en Supabase
+      const newTest = await insertTest({
+        timestamp: new Date().toISOString(),
+        age: Number(age),
+        gender,
+        wears_glasses: wearsGlasses,
+        visual_fatigue: visualFatigue,
+        average_time: testData.average,
+        calibrated_average: calibration > 0 ? Math.abs(250 - calibration) : 0,
+        faults: testData.faults,
+      });
+
+      if (!newTest?.id) throw new Error('No se pudo crear el test');
+
+      // Crear los intentos asociados
+      await insertAttempts(
+        testData.attempts.map((attempt, index) => ({
+          test_id: newTest.id,
+          attempt_number: index + 1,
+          time: attempt.time,
+          was_fault: attempt.wasFault,
+          delay_used: attempt.delayUsed,
+        }))
+      );
+
+      // Actualizar el estado local
+      setResults(prev => [
+        ...prev,
+        {
+          id: Number(newTest.id),
+          ...testData,
+          timestamp: newTest.timestamp,
+          age: Number(age),
+          wearsGlasses,
+          gender,
+          visualFatigue,
+        },
+      ]);
+
+      toast({
+        title: 'Test guardado',
+        description: 'Los resultados se han guardado correctamente.',
+      });
+    } catch (error) {
+      console.error('Error saving test:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo guardar el test.',
+      });
+    }
+  }, [age, wearsGlasses, gender, visualFatigue, calibration, toast]);
+
+
   
   const handleCalibrated = useCallback((avg: number) => {
     setCalibration(avg);
@@ -106,6 +188,20 @@ export default function Home() {
   }, []);
   
   const isTestDisabled = age === '';
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">
+      <Timer className="w-8 h-8 animate-spin" />
+    </div>;
+  }
+
+  if (error) {
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: error,
+    });
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8 md:p-12">
@@ -230,10 +326,12 @@ export default function Home() {
           </TabsContent>
 
           <TabsContent value="results" className="mt-4">
-            <Results results={results} calibration={calibration} onClearResults={clearResults} />
+            <Results results={results} calibration={calibration} />
           </TabsContent>
         </Tabs>
       </div>
     </main>
   );
 }
+
+export default HomePage;
