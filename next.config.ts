@@ -1,14 +1,30 @@
-import type {NextConfig} from 'next';
+// next.config.ts
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
-  /* config options here */
+
+  // Configuraciones generales
+  reactStrictMode: true,
+
+  // Variables de entorno expuestas al cliente
+  env: {
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    // ❗ GEMINI_API_KEY NO se expondrá en el cliente si no tiene prefijo NEXT_PUBLIC_
+    // Si es solo para el servidor, no lo pongas aquí; accede directamente a process.env
+  },
+
+  // Ignorar errores de TypeScript en build (útil en desarrollo)
   typescript: {
     ignoreBuildErrors: true,
   },
+
+  // Ignorar errores de ESLint en build
   eslint: {
     ignoreDuringBuilds: true,
   },
+
+  // Configuración de imágenes remotas
   images: {
     remotePatterns: [
       {

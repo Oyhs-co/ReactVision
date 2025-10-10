@@ -1,31 +1,35 @@
-# Stage 1: Base image with pnpm
+# Etapa 1: Base con pnpm
 FROM node:20-alpine AS base
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
-# Stage 2: Builder stage for installing dependencies
-FROM base AS builder
+# Etapa 2: Instalar dependencias
+FROM base AS deps
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile
 
-# Stage 3: Build stage for creating the Next.js application
+# Etapa 3: Build
 FROM base AS build
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN pnpm build
 
-# Stage 4: Production runner stage
-FROM node:20-alpine AS runner
+# Etapa final (runner)
+FROM base AS runner
 WORKDIR /app
-USER node
 
-# Copy standalone output, public assets, and static files from the build stage
-COPY --from=build --chown=node:node /app/.next/standalone ./
-COPY --from=build --chown=node:node /app/public ./public
-COPY --from=build --chown=node:node /app/.next/static ./.next/static
+# Copiar desde 'build', que sí tiene todos los archivos
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
+COPY --from=build /app/next.config.ts ./next.config.ts
+
+# node_modules ya está en .next/standalone si usas standalone,
+# pero si NO usas standalone, también necesitas copiarlo:
+COPY --from=deps /app/node_modules ./node_modules
 
 EXPOSE 3000
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV NODE_ENV=production
 
-CMD ["sh", "-c", "node server.js"]
+CMD ["pnpm", "start"]

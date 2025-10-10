@@ -1,30 +1,18 @@
-# Docker Compose configuration for running the application in a production-like environment.
-# It uses the multi-stage Dockerfile to build and run the final production image.
-#
-# Before running, ensure you have a .env file with the necessary environment variables.
 version: '3.8'
 
 services:
-  # The main web application service.
-  reactivision:
-    # Build the image using the Dockerfile in the current directory.
+  app:
     build:
       context: .
       dockerfile: Dockerfile
-    # Expose port 3000 on the host and map it to port 3000 in the container.
     ports:
       - "3000:3000"
-    # Load environment variables from a .env file in the root directory.
-    # This allows for easy management of secrets and configuration.
     env_file:
       - .env
-    # Set the container to always restart unless it is explicitly stopped.
     restart: unless-stopped
-    # Define a health check to ensure the application is running correctly.
-    # It periodically sends a request to the application's root URL.
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 5s # Give the container some time to start up before the first check.
+      start_period: 10s
