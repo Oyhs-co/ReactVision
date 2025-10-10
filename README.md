@@ -15,7 +15,7 @@ ReactiVision es una aplicación web de alta precisión diseñada para medir el t
   - [Instalación y Ejecución Local](#instalación-y-ejecución-local)
   - [Variables de Entorno](#variables-de-entorno)
   - [Despliegue en Railway (Recomendado)](#despliegue-en-railway-recomendado)
-  - [Despliegue con Docker](#despliegue-con-docker)
+  - [Despliegue con Docker y Docker Compose](#despliegue-con-docker-y-docker-compose)
   - [Flujo de IA con Genkit y Gemini](#flujo-de-ia-con-genkit-y-gemini)
   - [Calidad de Código](#calidad-de-código)
   - [Licencia](#licencia)
@@ -130,23 +130,29 @@ Railway es una plataforma de despliegue moderna que simplifica enormemente el pr
     *   En la sección **"Networking"**, asegúrate de que el puerto expuesto sea el `3000`. Railway generalmente maneja esto de forma automática, pero es bueno verificarlo.
 7.  Una vez que el despliegue finalice, Railway te proporcionará una URL pública donde tu aplicación estará en vivo.
 
-## Despliegue con Docker
+## Despliegue con Docker y Docker Compose
 
-El `Dockerfile` del proyecto está optimizado para producción mediante un **build multi-stage**. Esto crea una imagen final ligera y segura, ideal para despliegues.
+Para facilitar el desarrollo y las pruebas locales en un entorno similar al de producción, el proyecto incluye un archivo `docker-compose.yml` optimizado. Este archivo utiliza el `Dockerfile` multi-stage para construir y ejecutar la aplicación.
 
+**Pasos para ejecutar con Docker Compose:**
+
+1.  **Crea un archivo `.env`**: Asegúrate de tener un archivo `.env` en la raíz del proyecto con todas las variables de entorno necesarias (puedes basarte en `.env.example`).
+2.  **Construye la imagen**:
+    ```bash
+    docker-compose build
+    ```
+    Este comando leerá el `Dockerfile` y construirá la imagen de producción.
+3.  **Inicia el servicio**:
+    ```bash
+    docker-compose up
+    ```
+    La aplicación estará disponible en `http://localhost:3000`. El servicio se reiniciará automáticamente si se detiene de forma inesperada.
+
+El `Dockerfile` está estructurado en múltiples etapas para crear una imagen final ligera y segura:
 - **Stage 1 (base)**: Configura `pnpm`.
 - **Stage 2 (builder)**: Instala las dependencias de producción.
 - **Stage 3 (build)**: Construye la aplicación Next.js con `output: 'standalone'`.
 - **Stage 4 (runner)**: Copia solo los artefactos necesarios a una imagen ligera de Node.js.
-
-Para construir y ejecutar la imagen localmente:
-```bash
-# Construir la imagen
-docker build -t reactivision .
-
-# Ejecutar el contenedor
-docker run -p 3000:3000 -e NEXT_PUBLIC_SUPABASE_URL="..." -e NEXT_PUBLIC_SUPABASE_ANON_KEY="..." reactivision
-```
 
 ## Flujo de IA con Genkit y Gemini
 
