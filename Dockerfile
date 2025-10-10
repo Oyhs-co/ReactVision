@@ -1,29 +1,31 @@
-# Utilizar una imagen oficial de Node.js con menor superficie de ataque
+# Stage 1: Base image with pnpm
 FROM node:20-alpine AS base
-
-# Instalar pnpm de forma segura
 RUN corepack enable && corepack prepare pnpm@latest --activate
-
-# Establecer el directorio de trabajo
 WORKDIR /app
 
-# Copiar archivos de configuración
+# Stage 2: Builder stage for installing dependencies
+FROM base AS builder
 COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --prod
 
-# Instalar dependencias sin modificar el lockfile
-RUN pnpm install --frozen-lockfile
-
-# Copiar el resto del código fuente
+# Stage 3: Build stage for creating the Next.js application
+FROM base AS build
+COPY --from=builder /app/node_modules ./node_modules
 COPY . .
-
-# Construir la aplicación
 RUN pnpm build
 
-# Usar usuario no root para mayor seguridad
+# Stage 4: Production runner stage
+FROM node:20-alpine AS runner
+WORKDIR /app
 USER node
 
-# Exponer el puerto
-EXPOSE 3000
+# Copy standalone output, public assets, and static files from the build stage
+COPY --from=build --chown=node:node /app/.next/standalone ./
+COPY --from=build --chown=node:node /app/public ./public
+COPY --from=build --chown=node:node /app/.next/static ./.next/static
 
-# Comando de inicio
-CMD ["pnpm", "start"]
+EXPOSE 3000
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
+CMD ["sh", "-c", "node server.js"]

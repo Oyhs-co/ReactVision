@@ -1,206 +1,170 @@
-# ReactiVision
+# ReactiVision: Medidor de Tiempo de Reacción
 
-Aplicación web para medición de tiempo de reacción con precisión milisegundo, construida con Next.js (App Router), React, Tailwind + ShadCN/UI, y persistencia en Supabase. Incluye calibración personalizada, ejecución de tests, exportación a CSV y un flujo de procesamiento asistido por IA (Genkit + Google Gemini) para análisis avanzados de los resultados.
+ReactiVision es una aplicación web de alta precisión diseñada para medir el tiempo de reacción de un usuario en milisegundos. Construida con un stack moderno que incluye **Next.js (App Router)**, **React**, y **TailwindCSS + ShadCN/UI**, la aplicación ofrece una experiencia de usuario fluida y reactiva. La persistencia de datos se gestiona a través de **Supabase**, y se ha integrado un flujo de análisis avanzado con **IA (Genkit + Google Gemini)** para el procesamiento de los resultados.
 
+![ReactiVision Screenshot](https://raw.githubusercontent.com/Ivis-dev/reactivision/main/public/reactivision.png)
 
 ## Índice
-- Descripción general
-- Características
-- Arquitectura y stack
-- Estructura del proyecto
-- Modelo de datos (Supabase)
-- Instalación y ejecución local
-- Variables de entorno
-- Flujo de IA (Genkit + Gemini)
-- Exportación de resultados (CSV)
-- Despliegue con Docker
-- Calidad de código (ESLint/TypeScript)
-- Resolución de problemas (Troubleshooting)
-- Seguridad y consideraciones
-- Licencia
-- Referencias
 
+- [ReactiVision: Medidor de Tiempo de Reacción](#reactivision-medidor-de-tiempo-de-reacción)
+  - [Índice](#índice)
+  - [Descripción General](#descripción-general)
+  - [Características Principales](#características-principales)
+  - [Stack Tecnológico](#stack-tecnológico)
+  - [Estructura del Proyecto](#estructura-del-proyecto)
+  - [Instalación y Ejecución Local](#instalación-y-ejecución-local)
+  - [Variables de Entorno](#variables-de-entorno)
+  - [Despliegue en Railway (Recomendado)](#despliegue-en-railway-recomendado)
+  - [Despliegue con Docker](#despliegue-con-docker)
+  - [Flujo de IA con Genkit y Gemini](#flujo-de-ia-con-genkit-y-gemini)
+  - [Calidad de Código](#calidad-de-código)
+  - [Licencia](#licencia)
 
-## Descripción general
-ReactiVision permite:
-- Calibrar el tiempo de reacción base de una persona.
-- Ejecutar pruebas compuestas por múltiples intentos.
-- Registrar datos contextuales (edad, género, uso de gafas, fatiga visual).
-- Visualizar resultados, promedios y promedios calibrados.
-- Exportar datos detallados por intento a CSV.
-- Procesar el dataset con IA para obtener análisis adicionales y curación del CSV.
+## Descripción General
 
+ReactiVision va más allá de una simple medición. Permite a los usuarios:
+- **Calibrar** su tiempo de reacción base para obtener mediciones más precisas.
+- Realizar **tests de reacción** compuestos por múltiples intentos.
+- Registrar **datos contextuales** como edad, género, y fatiga visual.
+- **Visualizar** resultados detallados, incluyendo promedios y promedios calibrados.
+- **Exportar** los datos de los tests a formato **CSV**.
+- Utilizar un **flujo de IA** para analizar y procesar los datos exportados, obteniendo insights adicionales.
 
-## Características
-- Test de reacción: 5 intentos por test con control de tiempos válidos e inválidos.
-- Calibración: establece una línea base personalizada para corrección posterior.
-- Resultados: tabla con historial, promedio, promedio calibrado y fallos.
-- Exportación a CSV: dataset plano con fila por intento y metadatos del test.
-- Procesamiento con IA: flujo Genkit que invoca Gemini para generar un CSV procesado.
-- UI moderna: ShadCN/UI + Radix, responsive, modo oscuro predeterminado.
+## Características Principales
 
+- **Test de Reacción**: 5 intentos por prueba con control de tiempos válidos e inválidos.
+- **Calibración Personalizada**: Establece una línea base para corregir y contextualizar los resultados.
+- **Tabla de Resultados**: Historial de tests con promedios, promedios calibrados y número de fallos.
+- **Exportación a CSV**: Genera un dataset plano con todos los datos de un test para su análisis externo.
+- **Análisis con IA**: Un flujo de Genkit que utiliza Gemini para procesar el CSV y generar un análisis curado.
+- **UI Moderna y Responsiva**: Desarrollada con ShadCN/UI, Radix, y TailwindCSS, con modo oscuro por defecto.
 
-## Arquitectura y stack
-- Frontend: Next.js 15 (App Router), React 18, TypeScript, TailwindCSS, ShadCN/UI, Radix.
-- Persistencia: Supabase (PostgreSQL + PostgREST), tipado generado en src/lib/supabase/supabase.types.ts.
-- AI: Genkit + @genkit-ai/google-genai (Google Gemini).
-- Gráficas: Recharts (cuando aplica).
-- Construcción/ejecución: pnpm, Docker multi-stage, output standalone de Next.
+## Stack Tecnológico
 
+- **Frontend**: Next.js 15 (App Router), React 18, TypeScript.
+- **UI**: TailwindCSS, ShadCN/UI, Radix UI.
+- **Persistencia de Datos**: Supabase (PostgreSQL).
+- **Inteligencia Artificial**: Genkit, Google Gemini.
+- **Contenerización**: Docker (multi-stage build).
+- **Gestor de Paquetes**: pnpm.
 
-## Estructura del proyecto
-- src/app/page.tsx: página principal, orquesta calibración, test y resultados.
-- src/components/reaction-test.tsx: motor del test (estados, delays, validación, resumen).
-- src/components/calibration.tsx: reusa ReactionTest y delega promedio a la página.
-- src/components/results.tsx: tabla, exportación CSV y disparador de análisis por IA.
-- src/lib/supabase/api.ts: funciones para CRUD con Supabase (tests, intentos, análisis IA).
-- src/lib/supabase/supabase.types.ts: tipos inferidos de la BD.
-- src/ai/flows/process-reaction-data.ts: flujo Genkit para procesar CSV con Gemini.
+## Estructura del Proyecto
 
+```
+/
+├── src/
+│   ├── app/                # Rutas y páginas de Next.js
+│   ├── components/         # Componentes de React (ReactionTest, Calibration, Results)
+│   ├── lib/                # Librerías y helpers (API de Supabase)
+│   └── ai/                 # Flujos de IA con Genkit
+├── public/                 # Archivos estáticos
+├── .env.example            # Ejemplo de variables de entorno
+├── Dockerfile              # Configuración para la imagen de producción
+├── next.config.ts          # Configuración de Next.js (output: 'standalone')
+└── package.json            # Dependencias y scripts
+```
 
-## Modelo de datos (Supabase)
-Tablas principales (ver src/lib/supabase/supabase.types.ts):
-- public.reaction_tests
-  - id (number, PK)
-  - timestamp (string ISO)
-  - age (number)
-  - gender (string: 'male' | 'female' | 'other')
-  - wears_glasses (boolean)
-  - visual_fatigue (number)
-  - average_time (number)
-  - calibrated_average (number)
-  - faults (number)
-  - created_at (string ISO)
-- public.attempts
-  - id (number, PK)
-  - test_id (number, FK reaction_tests.id)
-  - attempt_number (number)
-  - time (number)
-  - was_fault (boolean)
-  - delay_used (number)
-  - created_at (string ISO)
-- public.ai_analysis
-  - id (number, PK)
-  - test_id (number, FK reaction_tests.id)
-  - analysis_text (string)
-  - processed_data (string, contenido CSV procesado)
-  - created_at (string ISO)
+## Instalación y Ejecución Local
 
-Nota: también se expone una función RPC reset_sequence para reiniciar secuencias de IDs tras limpieza de datos.
+**Requisitos Previos**:
+- Node.js (v20.x o superior)
+- pnpm (instalado vía `corepack enable`)
+- Un proyecto en [Supabase](https://supabase.com/) para las credenciales de la base de datos.
+- Una clave API de [Google AI (Gemini)](https://aistudio.google.com/).
 
-
-## Instalación y ejecución local
-Requisitos previos:
-- Node.js LTS
-- pnpm (Corepack recomendado): npm i -g corepack && corepack enable
-- Cuenta y proyecto en Supabase (credenciales públicas URL y ANON KEY)
-- Clave API de Google AI (Gemini) si se usará el flujo de IA
-
-Pasos:
-1) Instalar dependencias
+**Pasos**:
+1. Clona el repositorio:
+   ```bash
+   git clone https://github.com/Ivis-dev/reactivision.git
+   cd reactivision
+   ```
+2. Instala las dependencias:
+   ```bash
    pnpm install
-
-2) Configurar variables de entorno (ver sección Variables de entorno)
-   Crear .env en la raíz con las claves necesarias.
-
-3) Ejecutar en desarrollo (puerto 9002)
+   ```
+3. Configura las variables de entorno. Crea un archivo `.env` a partir de `.env.example` y añade tus claves.
+4. Ejecuta la aplicación en modo de desarrollo:
+   ```bash
    pnpm dev
+   ```
+   La aplicación estará disponible en `http://localhost:9002`.
 
-4) Compilar y arrancar en modo producción
-   pnpm build
-   pnpm start
+## Variables de Entorno
 
+Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
-## Variables de entorno
-Definir en .env según el entorno (desarrollo/producción):
-- NEXT_PUBLIC_SUPABASE_URL: URL del proyecto Supabase (pública)
-- NEXT_PUBLIC_SUPABASE_ANON_KEY: clave ANON pública de Supabase
-- NEXT_PUBLIC_ADMIN_KEY: clave admin para operaciones sensibles (por ejemplo, borrar todos los datos)
-- GEMINI_API_KEY: clave de Google AI Studio para usar Gemini en el flujo de IA
+```
+# URL pública de tu proyecto en Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://<tu-proyecto>.supabase.co
 
-Ejemplo .env
-NEXT_PUBLIC_SUPABASE_URL=https://XXXX.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyXXXX
-NEXT_PUBLIC_ADMIN_KEY=admin-strong-key
-GEMINI_API_KEY=AIzaXXXX
+# Clave anónima (pública) de tu proyecto en Supabase
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<tu-anon-key>
 
+# Clave de administrador para operaciones sensibles (ej. borrar datos)
+NEXT_PUBLIC_ADMIN_KEY=<tu-clave-admin>
 
-## Flujo de IA (Genkit + Gemini)
-Archivo: src/ai/flows/process-reaction-data.ts
-- Entrada: CSV generado localmente con ALL_FIELDS y parámetros (initialDelay, selectedFields).
-- Proceso: se delega a Gemini para limpiar, transformar y devolver un CSV procesado.
-- Persistencia: resultados se guardan opcionalmente en public.ai_analysis (campo processed_data).
+# Clave API para el servicio de IA de Google (Gemini)
+GEMINI_API_KEY=<tu-api-key>
+```
 
-Requisitos:
-- GEMINI_API_KEY en el entorno.
-- El comando de desarrollo de Genkit está disponible en package.json (genkit:dev, genkit:watch) si se desea ejecutar el flujo por separado.
+## Despliegue en Railway (Recomendado)
 
+Railway es una plataforma de despliegue moderna que simplifica enormemente el proceso de llevar una aplicación a producción. Gracias al `Dockerfile` incluido en este repositorio, el despliegue en Railway es un proceso rápido y sencillo.
 
-## Exportación de resultados (CSV)
-- El CSV base contiene una fila por intento y metadatos del test.
-- Columnas predeterminadas (ALL_FIELDS):
-  - Test ID, Timestamp, Age, Gender, Wears Glasses, Visual Fatigue
-  - Average Time (ms), Calibrated Average (ms), Faults
-  - Attempt Number, Attempt Time (ms), Was Fault, Delay Used (ms)
-- El procesamiento con IA permite reordenar/filtrar columnas y aplicar transformaciones simples.
+**Pasos para el despliegue:**
 
+1.  **Haz un Fork** de este repositorio en tu cuenta de GitHub.
+2.  Ve a tu [Dashboard de Railway](https://railway.app/dashboard) y haz clic en **"New Project"**.
+3.  Selecciona **"Deploy from GitHub repo"** y elige el fork de `reactivision` que acabas de crear.
+4.  Railway detectará automáticamente el `Dockerfile` y comenzará a construir la imagen de producción.
+5.  **Configura las variables de entorno**:
+    *   En el dashboard de tu nuevo proyecto en Railway, ve a la pestaña **"Variables"**.
+    *   Añade las siguientes variables de entorno con tus claves correspondientes:
+        *   `NEXT_PUBLIC_SUPABASE_URL`
+        *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+        *   `NEXT_PUBLIC_ADMIN_KEY`
+        *   `GEMINI_API_KEY`
+    *   Railway guardará y aplicará estas variables automáticamente.
+6.  **Configura el puerto de red**:
+    *   Ve a la pestaña **"Settings"** de tu servicio.
+    *   En la sección **"Networking"**, asegúrate de que el puerto expuesto sea el `3000`. Railway generalmente maneja esto de forma automática, pero es bueno verificarlo.
+7.  Una vez que el despliegue finalice, Railway te proporcionará una URL pública donde tu aplicación estará en vivo.
 
 ## Despliegue con Docker
-El proyecto incluye Dockerfile multi-stage y docker-compose.yml de ejemplo.
 
-Construir y ejecutar con Docker Compose:
-- Definir variables en el entorno del host o en un archivo .env.
-- Construcción
-  docker-compose build
-- Arranque
-  docker-compose up -d
-- Acceso
-  http://localhost:3000 (por defecto)
+El `Dockerfile` del proyecto está optimizado para producción mediante un **build multi-stage**. Esto crea una imagen final ligera y segura, ideal para despliegues.
 
-Notas:
-- Dockerfile usa Node 18-alpine + corepack (pnpm). El build se realiza con pnpm build y Next output standalone.
-- Se ejecuta como usuario node sin privilegios root y expone el puerto 3000.
+- **Stage 1 (base)**: Configura `pnpm`.
+- **Stage 2 (builder)**: Instala las dependencias de producción.
+- **Stage 3 (build)**: Construye la aplicación Next.js con `output: 'standalone'`.
+- **Stage 4 (runner)**: Copia solo los artefactos necesarios a una imagen ligera de Node.js.
 
+Para construir y ejecutar la imagen localmente:
+```bash
+# Construir la imagen
+docker build -t reactivision .
 
-## Calidad de código (ESLint/TypeScript)
-- Linter: next lint (ESLint + reglas Next/TypeScript). Ejecutar con
-  pnpm run lint
-- Se han corregido advertencias comunes: dependencias de hooks, tipos de errores desconocidos, uso de any, prefer-const, contenido no escapado en JSX, etc.
-- El build de Next puede ignorar errores de TypeScript y ESLint en producción mediante next.config.js:
-  typescript.ignoreBuildErrors = true
-  eslint.ignoreDuringBuilds = true
-  Recomendación: mantener el linter en cero y corregir los tipos cuando sea posible.
+# Ejecutar el contenedor
+docker run -p 3000:3000 -e NEXT_PUBLIC_SUPABASE_URL="..." -e NEXT_PUBLIC_SUPABASE_ANON_KEY="..." reactivision
+```
 
+## Flujo de IA con Genkit y Gemini
 
-## Resolución de problemas (Troubleshooting)
-- TypeError/TS sobre IDs de Supabase
-  Los IDs se tipan como number. Evita parseInt sobre valores number; usar Number(id) o directamente id.
-- ReferenceError: Cannot access 'resetTest' before initialization
-  Asegurar que hooks useEffect no importan o referencian constantes useCallback antes de su inicialización. Se reordenó resetTest para declararse antes del useEffect que lo usa.
-- next lint falla
-  Ejecutar pnpm run lint para ver los errores. Se priorizó eliminar any, usar unknown con guards, ajustar dependencias de hooks, y escapar caracteres en JSX.
-- Exportación CSV en navegadores restringidos
-  Se intenta usar el File System Access API (showSaveFilePicker) y, en caso de fallo, se recurre a un enlace de descarga de objeto Blob.
+El archivo `src/ai/flows/process-reaction-data.ts` contiene la lógica para el procesamiento de datos con IA.
+- **Entrada**: Recibe un archivo CSV con los datos de un test de reacción.
+- **Proceso**: Invoca al modelo de IA de **Google Gemini** para limpiar, analizar y transformar los datos.
+- **Salida**: Devuelve un CSV procesado y un análisis de texto de los resultados.
 
+Este flujo se puede ejecutar por separado para desarrollo y pruebas con los scripts de Genkit disponibles en `package.json`.
 
-## Seguridad y consideraciones
-- No expongas claves sensibles del lado cliente. Las claves de Supabase públicas (URL/ANON) son seguras para lectura controlada por RLS.
-- Configura reglas RLS y políticas en Supabase si expones endpoints públicamente.
-- Protege NEXT_PUBLIC_ADMIN_KEY y compártela solo con operadores autorizados (usada para borrar datos masivamente).
-- Considera almacenar claves privadas (si las hubiera) solo en el servidor o usar un gestor de secretos.
+## Calidad de Código
 
+El proyecto está configurado con **ESLint** y **TypeScript** para asegurar la calidad y mantenibilidad del código. Para verificar el código, puedes ejecutar:
+```bash
+pnpm run lint
+pnpm run typecheck
+```
 
 ## Licencia
-Este proyecto se distribuye bajo la licencia MIT. Ver archivo LICENSE en la raíz del repositorio.
 
-
-## Referencias
-- Next.js: https://nextjs.org/docs
-- React: https://react.dev/learn
-- Tailwind CSS: https://tailwindcss.com/docs
-- ShadCN/UI: https://ui.shadcn.com
-- Radix UI: https://www.radix-ui.com/primitives
-- Supabase: https://supabase.com/docs
-- Genkit: https://firebase.google.com/docs/genkit
-- Google AI Studio (Gemini): https://aistudio.google.com
-- Recharts: https://recharts.org/en-US
+Este proyecto se distribuye bajo la **Licencia MIT**. Consulta el archivo `LICENSE` para más detalles.
