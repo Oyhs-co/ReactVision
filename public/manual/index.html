@@ -18,49 +18,81 @@
         <header>
             <h1 id="animated-title"></h1>
             <p>Welcome to ReactiVision! Here’s how to use the application.</p>
+            <div class="toggle-switch">
+                <label>
+                    User Manual
+                    <input type="checkbox" id="manual-toggle">
+                    <span class="slider"></span>
+                    Developer Manual
+                </label>
+            </div>
         </header>
 
-        <main>
-            <section id="test">
-                <h2>The Reaction Test</h2>
-                <p>The main goal is to measure your reaction time. The test consists of 5 attempts.</p>
+        <main id="user-manual">
+            <section id="user-info">
+                <h2>User Information</h2>
+                <p>Before you begin, it's important to provide some information about yourself. This data is used to provide more accurate and contextualized analysis of your reaction times.</p>
                 <ul>
-                    <li><strong>Fill in your data:</strong> Provide your age, gender, glasses status, and visual fatigue level.</li>
-                    <li><strong>Start the test:</strong> Click the large box when it says "Click to start".</li>
-                    <li><strong>Wait for green:</strong> When it turns green, click as fast as possible.</li>
-                    <li><strong>Invalid clicks:</strong> Clicking early counts as a fault.</li>
-                    <li><strong>Review:</strong> After 5 attempts, your average time and faults are saved.</li>
+                    <li><strong>Age and Gender:</strong> Your age and gender can affect reaction times.</li>
+                    <li><strong>Wears Glasses:</strong> This helps in understanding visual acuity.</li>
+                    <li><strong>Visual Fatigue:</strong> A rating of your current eye strain.</li>
                 </ul>
             </section>
 
             <section id="calibration">
                 <h2>Calibration</h2>
-                <p>Calibration establishes your baseline for more accurate reaction results.</p>
+                <p>Calibration is a crucial step to ensure the accuracy of your reaction time measurements. It establishes a baseline by measuring your device's latency.</p>
                 <ul>
-                    <li><strong>How it works:</strong> You react to a sound cue to isolate cognitive delay.</li>
-                    <li><strong>Perform the test:</strong> Focus on the audio signal, not visual cues.</li>
-                    <li><strong>Result:</strong> The average time becomes your calibration value.</li>
+                    <li><strong>Start Calibration:</strong> Go to the "Calibration" tab and click the "Start" button.</li>
+                    <li><strong>Follow Instructions:</strong> The screen will guide you through a series of clicks. Click as soon as the screen turns green.</li>
+                    <li><strong>Complete:</strong> After a few attempts, the calibration will be complete, and you can proceed to the test.</li>
+                </ul>
+            </section>
+
+            <section id="test">
+                <h2>The Reaction Test</h2>
+                <p>The main test measures your reaction time. You'll need to complete 5 valid attempts.</p>
+                <ul>
+                    <li><strong>Start the test:</strong> Go to the "Test" tab and click "Start."</li>
+                    <li><strong>Wait for Green:</strong> The screen will turn green after a random delay. Click as fast as you can.</li>
+                    <li><strong>Faults:</strong> Clicking too early will result in a fault.</li>
+                    <li><strong>Progress:</strong> A progress bar will show your progress toward the 5 valid attempts.</li>
                 </ul>
             </section>
 
             <section id="results">
-                <h2>Results & Export</h2>
-                <p>This section shows all your completed test results.</p>
+                <h2>Results & AI Analysis</h2>
+                <p>This section displays your test history and provides AI-powered analysis.</p>
                 <ul>
-                    <li><strong>Average Time:</strong> The mean of your valid reaction times.</li>
-                    <li><strong>Calibrated Average:</strong> Average adjusted using calibration data.</li>
-                    <li><strong>Export to CSV:</strong> Download your data for analysis.</li>
-                    <li><strong>AI Analysis:</strong> Use AI tools to gain insights from your data.</li>
+                    <li><strong>View Results:</strong> Your average reaction time, number of faults, and other data are displayed in a table.</li>
+                    <li><strong>AI Analysis:</strong> Click the "AI" button to get a detailed analysis of a specific test.</li>
+                    <li><strong>General Analysis:</strong> A collapsible section at the top provides a general analysis of all your results.</li>
+                </ul>
+            </section>
+        </main>
+
+        <main id="developer-manual" style="display: none;">
+            <section id="tech-stack">
+                <h2>Tech Stack</h2>
+                <p>ReactiVision is built with a modern, robust technology stack:</p>
+                <ul>
+                    <li><strong>Frontend:</strong> Next.js (App Router), React, TypeScript</li>
+                    <li><strong>Styling:</strong> Tailwind CSS with Shadcn/UI</li>
+                    <li><strong>State Management:</strong> Zustand and React Hooks</li>
+                    <li><strong>Backend:</strong> Supabase (PostgreSQL)</li>
+                    <li><strong>AI:</strong> Google Gemini via Genkit</li>
                 </ul>
             </section>
 
-            <section id="tips">
-                <h2>Tips for Accurate Results</h2>
+            <section id="project-structure">
+                <h2>Project Structure</h2>
+                <p>The codebase is organized into the following main directories:</p>
                 <ul>
-                    <li>Stay focused and minimize distractions.</li>
-                    <li>Perform calibration before main tests.</li>
-                    <li>Keep your hand comfortable on your input device.</li>
-                    <li>Provide accurate demographic data for context.</li>
+                    <li><code>/src/app</code> - Main application pages</li>
+                    <li><code>/src/components</code> - Reusable React components</li>
+                    <li><code>/src/hooks</code> - Custom hooks for shared logic</li>
+                    <li><code>/src/lib</code> - Core logic and Supabase client</li>
+                    <li><code>/src/ai</code> - AI-related flows</li>
                 </ul>
             </section>
         </main>
@@ -69,18 +101,23 @@
     <button id="back-to-top" title="Go to top">↑</button>
 
     <script>
-        // Animación de aparición por secciones
-        const sections = document.querySelectorAll("main section");
-        const observer = new IntersectionObserver(entries => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) entry.target.classList.add("visible");
-            });
-        }, { threshold: 0.2 });
-        sections.forEach(section => observer.observe(section));
+        const userManual = document.getElementById("user-manual");
+        const developerManual = document.getElementById("developer-manual");
+        const toggle = document.getElementById("manual-toggle");
 
-        // Título animado tipo "escritura" con brillo sin resplandor
+        toggle.addEventListener("change", () => {
+            if (toggle.checked) {
+                userManual.style.display = "none";
+                developerManual.style.display = "block";
+            } else {
+                userManual.style.display = "block";
+                developerManual.style.display = "none";
+            }
+        });
+
+        // Título animado
         const title = document.getElementById("animated-title");
-        const fullText = "ReactiVision User Manual";
+        const fullText = "ReactiVision Manual";
         let index = 0;
         function typeWriter() {
             if (index < fullText.length) {
@@ -101,19 +138,6 @@
         });
         btn.addEventListener("click", () => {
             window.scrollTo({ top: 0, behavior: "smooth" });
-        });
-
-        // 🔍 Efecto de enfoque al acercarse al centro
-        window.addEventListener("scroll", () => {
-            const middle = window.innerHeight / 2;
-            sections.forEach(sec => {
-                const rect = sec.getBoundingClientRect();
-                const secMiddle = rect.top + rect.height / 2;
-                const distance = Math.abs(middle - secMiddle);
-                const scale = Math.max(1, 1.1 - distance / 800); // más cerca = más grande
-                sec.style.transform = `scale(${scale})`;
-                sec.style.transition = "transform 0.3s ease-out";
-            });
         });
     </script>
 </body>

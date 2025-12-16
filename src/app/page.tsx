@@ -26,6 +26,7 @@ import type { Gender, Result, AttemptDetail } from '@/types';
  * Main application page component.
  * Manages the overall state of the reaction time testing application,
  * including user data collection, calibration, testing, and result display.
+ * @returns {JSX.Element} The rendered component.
  */
 export default function HomePage() {
   const { calibrated, deviceLatency, calibratedMedian } = useCalibrationGate();
@@ -143,7 +144,7 @@ export default function HomePage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8 md:p-12">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-6xl">
         <header className="mb-8 text-center relative">
           <h1 className="text-5xl font-bold text-primary flex items-center justify-center gap-3">
             <Timer className="w-12 h-12" />
@@ -159,16 +160,32 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* User data form moved out of the Test tab into its own section */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>User information</CardTitle>
-            <CardDescription>Provide your demographic data before calibrating.</CardDescription>
+            <CardTitle>How to Use This App</CardTitle>
           </CardHeader>
           <CardContent>
-            <UserForm onSave={(p) => { setUserProfile(p); toast({ title: 'User profile saved' }); }} />
+            <ul className="list-disc list-inside text-muted-foreground space-y-2">
+              <li>
+                <strong>User Information:</strong> Fill out the user form with your details. This is important for accurate analysis.
+              </li>
+              <li>
+                <strong>Calibration:</strong> Before starting the test, go to the calibration tab and complete the calibration process.
+              </li>
+              <li>
+                <strong>Reaction Test:</strong> Once calibrated, you can take the reaction test. Click the button as soon as it turns green.
+              </li>
+              <li>
+                <strong>Results:</strong> After the test, your results will be displayed in the results tab, where you can also get an AI-powered analysis.
+              </li>
+            </ul>
           </CardContent>
         </Card>
+
+        {/* User data form moved out of the Test tab into its own section */}
+        <div className="mb-6">
+          <UserForm onSave={(p) => { setUserProfile(p); toast({ title: 'User profile saved' }); }} />
+        </div>
 
         <Tabs defaultValue={calibrated ? 'test' : 'calibration'} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
