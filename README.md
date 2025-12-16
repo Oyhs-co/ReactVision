@@ -23,6 +23,7 @@ ReactiVision es una aplicación web de alta precisión diseñada para medir el t
 ## Descripción General
 
 ReactiVision va más allá de una simple medición. Permite a los usuarios:
+
 - **Calibrar** su tiempo de reacción base para obtener mediciones más precisas.
 - Realizar **tests de reacción** compuestos por múltiples intentos.
 - Registrar **datos contextuales** como edad, género, y fatiga visual.
@@ -50,8 +51,8 @@ ReactiVision va más allá de una simple medición. Permite a los usuarios:
 
 ## Estructura del Proyecto
 
-```
-/
+```text
+/ 
 ├── src/
 │   ├── app/                # Rutas y páginas de Next.js
 │   ├── components/         # Componentes de React (ReactionTest, Calibration, Results)
@@ -74,16 +75,21 @@ ReactiVision va más allá de una simple medición. Permite a los usuarios:
 
 **Pasos**:
 1. Clona el repositorio:
+
    ```bash
    git clone https://github.com/Ivis-dev/reactivision.git
    cd reactivision
    ```
+
 2. Instala las dependencias:
+
    ```bash
    pnpm install
    ```
+
 3. Configura las variables de entorno. Crea un archivo `.env` a partir de `.env.example` y añade tus claves.
 4. Ejecuta la aplicación en modo de desarrollo:
+
    ```bash
    pnpm dev
    ```
@@ -93,7 +99,7 @@ ReactiVision va más allá de una simple medición. Permite a los usuarios:
 
 Crea un archivo `.env` en la raíz del proyecto con las siguientes variables:
 
-```
+```env
 # URL pública de tu proyecto en Supabase
 NEXT_PUBLIC_SUPABASE_URL=https://<tu-proyecto>.supabase.co
 
@@ -113,22 +119,22 @@ Railway es una plataforma de despliegue moderna que simplifica enormemente el pr
 
 **Pasos para el despliegue:**
 
-1.  **Haz un Fork** de este repositorio en tu cuenta de GitHub.
-2.  Ve a tu [Dashboard de Railway](https://railway.app/dashboard) y haz clic en **"New Project"**.
-3.  Selecciona **"Deploy from GitHub repo"** y elige el fork de `reactivision` que acabas de crear.
-4.  Railway detectará automáticamente el `Dockerfile` y comenzará a construir la imagen de producción.
-5.  **Configura las variables de entorno**:
-    *   En el dashboard de tu nuevo proyecto en Railway, ve a la pestaña **"Variables"**.
-    *   Añade las siguientes variables de entorno con tus claves correspondientes:
-        *   `NEXT_PUBLIC_SUPABASE_URL`
-        *   `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-        *   `NEXT_PUBLIC_ADMIN_KEY`
-        *   `GEMINI_API_KEY`
-    *   Railway guardará y aplicará estas variables automáticamente.
-6.  **Configura el puerto de red**:
-    *   Ve a la pestaña **"Settings"** de tu servicio.
-    *   En la sección **"Networking"**, asegúrate de que el puerto expuesto sea el `3000`. Railway generalmente maneja esto de forma automática, pero es bueno verificarlo.
-7.  Una vez que el despliegue finalice, Railway te proporcionará una URL pública donde tu aplicación estará en vivo.
+1. **Haz un Fork** de este repositorio en tu cuenta de GitHub.
+2. Ve a tu [Dashboard de Railway](https://railway.app/dashboard) y haz clic en **"New Project"**.
+3. Selecciona **"Deploy from GitHub repo"** y elige el fork de `reactivision` que acabas de crear.
+4. Railway detectará automáticamente el `Dockerfile` y comenzará a construir la imagen de producción.
+5. **Configura las variables de entorno**:
+    - En el dashboard de tu nuevo proyecto en Railway, ve a la pestaña **"Variables"**.
+    - Añade las siguientes variables de entorno con tus claves correspondientes:
+        - `NEXT_PUBLIC_SUPABASE_URL`
+        - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+        - `NEXT_PUBLIC_ADMIN_KEY`
+        - `GEMINI_API_KEY`
+    - Railway guardará y aplicará estas variables automáticamente.
+6. **Configura el puerto de red**:
+    - Ve a la pestaña **"Settings"** de tu servicio.
+    - En la sección **"Networking"**, asegúrate de que el puerto expuesto sea el `3000`. Railway generalmente maneja esto de forma automática, pero es bueno verificarlo.
+7. Una vez que el despliegue finalice, Railway te proporcionará una URL pública donde tu aplicación estará en vivo.
 
 ## Despliegue con Docker y Docker Compose
 
@@ -136,19 +142,24 @@ Para facilitar el desarrollo y las pruebas locales en un entorno similar al de p
 
 **Pasos para ejecutar con Docker Compose:**
 
-1.  **Crea un archivo `.env`**: Asegúrate de tener un archivo `.env` en la raíz del proyecto con todas las variables de entorno necesarias (puedes basarte en `.env.example`).
-2.  **Construye la imagen**:
+1. **Crea un archivo `.env`**: Asegúrate de tener un archivo `.env` en la raíz del proyecto con todas las variables de entorno necesarias (puedes basarte en `.env.example`).
+2. **Construye la imagen**:
+
     ```bash
     docker-compose build
     ```
+
     Este comando leerá el `Dockerfile` y construirá la imagen de producción.
-3.  **Inicia el servicio**:
+3. **Inicia el servicio**:
+
     ```bash
     docker-compose up
     ```
+
     La aplicación estará disponible en `http://localhost:3000`. El servicio se reiniciará automáticamente si se detiene de forma inesperada.
 
 El `Dockerfile` está estructurado en múltiples etapas para crear una imagen final ligera y segura:
+
 - **Stage 1 (base)**: Configura `pnpm`.
 - **Stage 2 (builder)**: Instala las dependencias de producción.
 - **Stage 3 (build)**: Construye la aplicación Next.js con `output: 'standalone'`.
@@ -157,6 +168,7 @@ El `Dockerfile` está estructurado en múltiples etapas para crear una imagen fi
 ## Flujo de IA con Genkit y Gemini
 
 El archivo `src/ai/flows/process-reaction-data.ts` contiene la lógica para el procesamiento de datos con IA.
+
 - **Entrada**: Recibe un archivo CSV con los datos de un test de reacción.
 - **Proceso**: Invoca al modelo de IA de **Google Gemini** para limpiar, analizar y transformar los datos.
 - **Salida**: Devuelve un CSV procesado y un análisis de texto de los resultados.
