@@ -22,6 +22,12 @@ export async function getTests(): Promise<(ReactionTest & { attempts: Attempt[] 
   })[]
 }
 
+/**
+ * Inserta un nuevo registro en `reaction_tests` y devuelve el test insertado (incluyendo `attempts`).
+ * IMPORTANTE: Si cambia la estructura de la tabla (nombres de columnas o tipos), actualiza
+ * `src/lib/supabase/supabase.types.ts` y el mapeo en `src/app/page.tsx` donde los campos
+ * devuelven `calibrated_average`, `average_time`, etc.
+ */
 export async function insertTest(test: ReactionTestInsert): Promise<ReactionTest & { attempts: Attempt[] }> {
   const { data, error } = await (getSupabase()
     .from('reaction_tests') as unknown as {
