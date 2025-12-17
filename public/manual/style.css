@@ -66,6 +66,7 @@ body {
     background: linear-gradient(90deg, var(--primary-blue), var(--accent-pink), var(--primary-blue));
     -webkit-background-clip: text;
     background-clip: text;
+    -webkit-text-fill-color: transparent;
     white-space: nowrap;
     overflow: hidden;
     border-right: 3px solid var(--accent-pink);
@@ -77,6 +78,8 @@ body {
 #animated-title span {
     background: inherit;
     -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
     color: transparent;
 }
 
@@ -164,3 +167,50 @@ strong { color: #fff; }
 }
 #back-to-top:hover { transform: scale(1.1); }
 
+/* Toggle Switch */
+.toggle-switch {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.toggle-switch label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.toggle-switch input {
+    display: none;
+}
+
+.toggle-switch .slider {
+    position: relative;
+    width: 60px;
+    height: 34px;
+    background-color: var(--border-color);
+    border-radius: 34px;
+    transition: background-color 0.3s;
+    margin: 0 10px;
+}
+
+.toggle-switch .slider:before {
+    content: "";
+    position: absolute;
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+.toggle-switch input:checked + .slider {
+    background-color: var(--primary-blue);
+}
+
+.toggle-switch input:checked + .slider:before {
+    transform: translateX(26px);
+}
