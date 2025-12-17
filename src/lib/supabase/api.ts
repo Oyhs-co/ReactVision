@@ -80,6 +80,17 @@ export async function getAiAnalysis(testId: number): Promise<AiAnalysis | null> 
   return data ? (data as AiAnalysis) : null
 }
 
+export async function getAllAiAnalyses(testIds: number[]): Promise<AiAnalysis[]> {
+  const { data, error } = await getSupabase()
+    .from('ai_analysis')
+    .select('*')
+    .in('test_id', testIds)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return data as AiAnalysis[]
+}
+
 export async function insertAttempts(attempts: AttemptInsert[]): Promise<Attempt[]> {
   const { data, error } = await (getSupabase()
     .from('attempts') as unknown as {
