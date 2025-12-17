@@ -1,8 +1,20 @@
 # ReactiVision: Medidor de Tiempo de Reacción
 
-ReactiVision es una aplicación web de alta precisión diseñada para medir el tiempo de reacción de un usuario en milisegundos. Construida con un stack moderno que incluye **Next.js (App Router)**, **React**, y **TailwindCSS + ShadCN/UI**, la aplicación ofrece una experiencia de usuario fluida y reactiva. La persistencia de datos se gestiona a través de **Supabase**, y se ha integrado un flujo de análisis avanzado con **IA (Genkit + Google Gemini)** para el procesamiento de los resultados.
-
-![ReactiVision Screenshot](https://raw.githubusercontent.com/Ivis-dev/reactivision/main/public/reactivision.png)
+<div align="center">
+  <img src="https://raw.githubusercontent.com/Ivis-dev/reactivision/main/public/reactivision.png" alt="ReactiVision Screenshot" width="800">
+  <br />
+  <br />
+  <p>
+    <strong>ReactiVision</strong> es una aplicación web de alta precisión diseñada para medir el tiempo de reacción de un usuario en milisegundos.
+  </p>
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js">
+    <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
+    <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript">
+    <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
+    <img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT">
+  </p>
+</div>
 
 ## Índice
 
@@ -10,6 +22,11 @@ ReactiVision es una aplicación web de alta precisión diseñada para medir el t
   - [Índice](#índice)
   - [Descripción General](#descripción-general)
   - [Características Principales](#características-principales)
+  - [Arquitectura](#arquitectura)
+    - [Flujo de Datos](#flujo-de-datos)
+  - [Diseño](#diseño)
+  - [Fórmulas](#fórmulas)
+  - [Desarrollo](#desarrollo)
   - [Stack Tecnológico](#stack-tecnológico)
   - [Estructura del Proyecto](#estructura-del-proyecto)
   - [Instalación y Ejecución Local](#instalación-y-ejecución-local)
@@ -18,6 +35,9 @@ ReactiVision es una aplicación web de alta precisión diseñada para medir el t
   - [Despliegue con Docker y Docker Compose](#despliegue-con-docker-y-docker-compose)
   - [Flujo de IA con Genkit y Gemini](#flujo-de-ia-con-genkit-y-gemini)
   - [Calidad de Código](#calidad-de-código)
+  - [Mejoras Futuras](#mejoras-futuras)
+  - [Contribuciones](#contribuciones)
+  - [Código de Conducta](#código-de-conducta)
   - [Licencia](#licencia)
 
 ## Descripción General
@@ -39,6 +59,51 @@ ReactiVision va más allá de una simple medición. Permite a los usuarios:
 - **Exportación a CSV**: Genera un dataset plano con todos los datos de un test para su análisis externo.
 - **Análisis con IA**: Un flujo de Genkit que utiliza Gemini para procesar el CSV y generar un análisis curado.
 - **UI Moderna y Responsiva**: Desarrollada con ShadCN/UI, Radix, y TailwindCSS, con modo oscuro por defecto.
+
+## Arquitectura
+
+ReactiVision está construido con una arquitectura moderna y escalable, utilizando las siguientes tecnologías y patrones:
+
+- **Framework:** Next.js (App Router)
+- **Lenguaje:** TypeScript
+- **Librería UI:** React
+- **Estilos:** Tailwind CSS con ShadCN/UI
+- **Gestión de Estado:** React Hooks (`useState`, `useCallback`, `useEffect`) y Zustand para el estado global de calibración.
+- **Base de Datos:** Supabase (PostgreSQL)
+- **IA:** Google Gemini a través de Genkit
+- **Despliegue:** Docker, Railway
+
+### Flujo de Datos
+
+1.  **Entrada de Usuario:** El usuario proporciona sus datos a través del componente `UserForm`, que se guardan en el almacenamiento local.
+2.  **Calibración:** El componente `Calibration` utiliza el hook `useReactionTest` para medir el tiempo de reacción base del usuario y guarda los datos de calibración en el estado global.
+3.  **Test de Reacción:** El componente `ReactionTest` también utiliza el hook `useReactionTest` para realizar el test de tiempo de reacción.
+4.  **Resultados:** Los resultados del test se guardan en la base de datos de Supabase a través de las funciones `insertTest` y `insertAttempts` en `lib/supabase/api.ts`.
+5.  **Análisis de IA:** El componente `Results` puede activar un análisis de IA de los resultados del test llamando a la función `getAiAnalysis`, que obtiene el análisis de la base de datos de Supabase.
+
+## Diseño
+
+El diseño de ReactiVision se centra en la usabilidad y la experiencia de usuario, con los siguientes principios:
+
+- **Minimalismo:** Una interfaz limpia y despejada para minimizar las distracciones.
+- **Feedback Visual:** Indicadores visuales claros, como barras de progreso, efectos de Foco y animaciones, para guiar al usuario.
+- **Feedback Audible:** Una señal audible al inicio de cada test para mejorar la accesibilidad y la precisión.
+- **Consistencia de Marca:** Una paleta de colores coherente que utiliza el color primario de la marca para los elementos interactivos.
+
+## Fórmulas
+
+La aplicación utiliza las siguientes fórmulas para calcular los resultados de los tests:
+
+- **Mediana:** La mediana se utiliza para calcular el tiempo de reacción base del usuario durante la calibración, lo que proporciona una medida más robusta que la media.
+- **Eliminación de Outliers:** Se utiliza un algoritmo de eliminación de outliers para eliminar los tiempos de reacción anómalos, asegurando que los resultados sean precisos.
+
+## Desarrollo
+
+- **Estilo de Código:** Sigue el estilo de código y el formato existentes, que se aplican con ESLint y Prettier.
+- **Diseño de Componentes:** Los componentes deben ser pequeños, reutilizables y centrados en una única responsabilidad.
+- **Gestión de Estado:** Utiliza el estado local siempre que sea posible. Para el estado compartido, considera la posibilidad de crear un hook personalizado. Para el estado global, utiliza el store `useCalibrationGate` o crea uno nuevo si es necesario.
+- **Llamadas a la API:** Todas las llamadas a la API de Supabase deben realizarse en `lib/supabase/api.ts`.
+- **Documentación:** Mantén la documentación en el código (JSDoc) actualizada con cualquier cambio.
 
 ## Stack Tecnológico
 
@@ -182,6 +247,28 @@ El proyecto está configurado con **ESLint** y **TypeScript** para asegurar la c
 pnpm run lint
 pnpm run typecheck
 ```
+
+## Mejoras Futuras
+
+- **Análisis de IA Completo:** El análisis de IA "general" actual podría ampliarse para proporcionar un análisis más completo de todos los resultados del usuario, identificando tendencias y patrones a lo largo del tiempo.
+- **Cuentas de Usuario y Persistencia de Datos:** La aplicación actualmente almacena los datos del usuario en el almacenamiento local. La implementación de cuentas de usuario permitiría a los usuarios guardar sus resultados y acceder a ellos desde diferentes dispositivos.
+- **Calibración Más Sofisticada:** El proceso de calibración podría hacerse más sofisticado teniendo en cuenta otros factores, como la resolución de la pantalla y la frecuencia de actualización del usuario.
+- **Gamificación:** Para que la aplicación sea más atractiva, se podrían añadir elementos de gamificación, como tablas de clasificación, logros y desafíos.
+- **Accesibilidad:** La aplicación podría ser más accesible para los usuarios con discapacidades añadiendo funciones como el soporte para lectores de pantalla y la navegación por teclado.
+
+## Contribuciones
+
+Las contribuciones son bienvenidas. Si deseas contribuir a este proyecto, por favor sigue estos pasos:
+
+1.  Haz un fork del repositorio.
+2.  Crea una nueva rama para tu feature (`git checkout -b feature/nueva-feature`).
+3.  Realiza tus cambios y haz commit (`git commit -m 'Añade nueva feature'`).
+4.  Haz push a tu rama (`git push origin feature/nueva-feature`).
+5.  Abre un Pull Request.
+
+## Código de Conducta
+
+Este proyecto se adhiere al [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md).
 
 ## Licencia
 
